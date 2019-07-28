@@ -227,23 +227,28 @@ ln_remove_dest(struct ln_ctx *const ln_ctx,
                const struct stat *const source_sb,
                const char *const path_dest){
   struct stat dest_sb;
+  bool removed;
 
+  removed = true;
   if(stat(path_dest, &dest_sb) == 0){
     if(ln_ctx->flags & LN_FLAG_REMOVE_DEST){
       if(ln_same_file(source_sb, &dest_sb)){
         ln_warn(ln_ctx, false, "source and destination same: %s", path_dest);
+        removed = false;
       }
       else{
         if(unlink(path_dest) != 0){
           ln_warn(ln_ctx, true, "failed to unlink destination: %s", path_dest);
+          removed = false;
         }
       }
     }
     else{
       ln_warn(ln_ctx, false, "destination already exists: %s", path_dest);
+      removed = false;
     }
   }
-  return ln_ctx->status_code == EXIT_SUCCESS;
+  return removed;
 }
 
 /**
